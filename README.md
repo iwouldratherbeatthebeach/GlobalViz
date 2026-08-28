@@ -51,12 +51,22 @@ photoreal NASA Blue Marble Earth texture is embedded in the app — so it runs o
 - **Orbit-regime classification** — LEO / MEO / GEO / HEO (plus Ground), auto-detected
   from the orbital elements, each colored, with an interactive legend to toggle classes.
 - **Ground / lat-lon mapping** — plot ground stations, cities, or precomputed positions.
+- **Ground↔satellite connections** — optional line-of-sight links from each ground
+  station to the satellites currently above a configurable elevation mask, colored by
+  elevation (amber = low on the horizon, green = overhead). Updates live as satellites
+  pass over — watch contact windows open and close.
+- **Cities layer** — ~130 major world cities that appear progressively as you zoom in
+  (embedded; no map tiles, works offline).
 - **Click for details** — apogee, perigee, period, inclination, eccentricity (satellites)
   or lat/lon/alt (ground).
 - **On-globe speed controls** — pause / 1x / 10x / 60x / 300x.
 - **Zoom range** framed so GEO and HEO orbits are visible; defaults to framing all orbits.
 - **100% offline / air-gapped** — no CDNs, no downloads, no runtime network requests.
 - Ships with **sample data** (all orbit classes + ground sites) and a ready-made dashboard.
+
+Zoomed in — cities, ground stations, and live ground→satellite connection lines:
+
+![Cities and connections](docs/cities.png)
 
 ## Compatibility
 
@@ -153,6 +163,48 @@ index=tracking sourcetype=positions | table object_name lat lon alt
 Surface objects sit on the globe; anything with altitude floats above it and is
 classified by altitude band.
 
+### Showing interactions / contacts from a search (data-driven links)
+
+The connection view has two modes (**Format → Ground-satellite connections → Connection
+source**):
+
+- **Line-of-sight (`geometry`)** — the viz computes which satellites are above each
+  station's horizon and links them. No extra data needed.
+- **From search (`data`)** — the viz draws a link **only where your search says two
+  objects are interacting**. Use this to show real contacts from telemetry, contact logs,
+  or a schedule. (`both` overlays the two.)
+
+To feed data links, add **link rows** to the result set — rows carrying a `from` and a
+`to` that name two plotted objects (matched to their `name`, case-insensitive), optionally
+with a `status`:
+
+| Column   | Meaning |
+|----------|---------|
+| `from`   | one endpoint's name (e.g. a ground station). Aliases: `source`, `link_from` |
+| `to`     | other endpoint's name (e.g. a satellite). Aliases: `target`, `link_to` |
+| `status` | optional; colors the line: `active`/`contact`/`up` = green, `scheduled`/`planned` = amber, `down`/`lost`/`error` = red, else blue. Aliases: `state`, `link_status` |
+| `color`  | optional; explicit CSS color, overrides status |
+
+Example — plot the catalog, then draw a link for every current contact from a contact
+index:
+
+```spl
+| inputlookup satellites.csv | table name orbit_class tle1 tle2
+| append [ | inputlookup ground_stations.csv | table name orbit_class lat lon ]
+| append
+    [ search index=ground_contacts earliest=-5m
+    | dedup station satellite
+    | eval from=station, to=satellite, status=status
+    | table from to status ]
+```
+
+Set **Connection source = From search**. Only station↔satellite pairs present in your
+contact events get a line, updated as the search refreshes. The `from`/`to` values must
+match the object names exactly (case-insensitive) — e.g. `to="ISS (ZARYA)"`.
+
+Alternative (one row per object): add a `connects_to` column listing the names it links to,
+comma-separated — e.g. a satellite row with `connects_to="Svalbard, Goldstone"`.
+
 ## Orbit classification
 
 Computed from the TLE-derived orbital elements (or the `alt` value in lat/lon mode):
@@ -215,6 +267,10 @@ All set via the Format menu, or as `<option name="display.visualizations.custom.
 | `showLabels` | `true` | Draw object names |
 | `useTexture` | `true` | Textured Earth (off = simple vector globe) |
 | `showGraticule` | `false` | Lat/lon grid lines |
+| `showCities` | `true` | Show major cities (appear as you zoom in) |
+| `showConnections` | `false` | Draw ground→satellite line-of-sight links |
+| `minElevationDeg` | `10` | Elevation mask (deg) for a satellite to count as "in contact" (geometry mode) |
+| `connectionMode` | `geometry` | `geometry` (line-of-sight), `data` (from/to rows in the search), or `both` |
 | `showOrbits` | `true` | Draw orbit paths for TLE objects |
 | `clockMultiplier` | `1` | Initial animation speed (× realtime) |
 | `orbitWindowHours` | `3` | Orbit-track window length |
