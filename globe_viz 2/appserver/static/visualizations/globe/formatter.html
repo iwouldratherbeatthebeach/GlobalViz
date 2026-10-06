@@ -1,0 +1,222 @@
+<!--
+  Format menu for the 3D Globe visualization.
+  Input names use {{VIZ_NAMESPACE}}.<property>, mapped to the config keys the code reads.
+-->
+<form>
+    <splunk-formatter-section section-label="Orbit classes">
+
+        <splunk-control-group label="Color points by orbit class">
+            <splunk-radio-input name="{{VIZ_NAMESPACE}}.colorByOrbitClass" value="true">
+                <option value="true">On</option>
+                <option value="false">Off</option>
+            </splunk-radio-input>
+        </splunk-control-group>
+
+        <splunk-control-group label="Show orbit-class legend">
+            <splunk-radio-input name="{{VIZ_NAMESPACE}}.showLegend" value="true">
+                <option value="true">On</option>
+                <option value="false">Off</option>
+            </splunk-radio-input>
+        </splunk-control-group>
+
+        <splunk-control-group label="LEO color (Low Earth Orbit)">
+            <splunk-color-picker name="{{VIZ_NAMESPACE}}.leoColor" value="#33ccff"></splunk-color-picker>
+        </splunk-control-group>
+        <splunk-control-group label="MEO color (Medium Earth Orbit)">
+            <splunk-color-picker name="{{VIZ_NAMESPACE}}.meoColor" value="#66ff66"></splunk-color-picker>
+        </splunk-control-group>
+        <splunk-control-group label="GEO color (Geostationary/synchronous)">
+            <splunk-color-picker name="{{VIZ_NAMESPACE}}.geoColor" value="#ffcc33"></splunk-color-picker>
+        </splunk-control-group>
+        <splunk-control-group label="HEO color (Highly Elliptical)">
+            <splunk-color-picker name="{{VIZ_NAMESPACE}}.heoColor" value="#ff66cc"></splunk-color-picker>
+        </splunk-control-group>
+        <splunk-control-group label="Ground color (surface objects)">
+            <splunk-color-picker name="{{VIZ_NAMESPACE}}.groundColor" value="#ff8c42"></splunk-color-picker>
+        </splunk-control-group>
+
+    </splunk-formatter-section>
+
+    <splunk-formatter-section section-label="Appearance">
+
+        <splunk-control-group label="Default point color (when not coloring by class)">
+            <splunk-color-picker name="{{VIZ_NAMESPACE}}.objectColor" value="#33ccff"></splunk-color-picker>
+        </splunk-control-group>
+        <splunk-control-group label="Point size (px)">
+            <splunk-text-input name="{{VIZ_NAMESPACE}}.pointSize" value="5"></splunk-text-input>
+        </splunk-control-group>
+        <splunk-control-group label="Show labels">
+            <splunk-radio-input name="{{VIZ_NAMESPACE}}.showLabels" value="true">
+                <option value="true">On</option>
+                <option value="false">Off</option>
+            </splunk-radio-input>
+        </splunk-control-group>
+        <splunk-control-group label="Textured Earth (off = simple vector globe)">
+            <splunk-radio-input name="{{VIZ_NAMESPACE}}.useTexture" value="true">
+                <option value="true">On</option>
+                <option value="false">Off</option>
+            </splunk-radio-input>
+        </splunk-control-group>
+        <splunk-control-group label="Show lat/lon graticule">
+            <splunk-radio-input name="{{VIZ_NAMESPACE}}.showGraticule" value="false">
+                <option value="true">On</option>
+                <option value="false">Off</option>
+            </splunk-radio-input>
+        </splunk-control-group>
+        <splunk-control-group label="Show cities (appear as you zoom in)">
+            <splunk-radio-input name="{{VIZ_NAMESPACE}}.showCities" value="true">
+                <option value="true">On</option>
+                <option value="false">Off</option>
+            </splunk-radio-input>
+        </splunk-control-group>
+
+    </splunk-formatter-section>
+
+    <splunk-formatter-section section-label="Layers (also toggleable on the globe)">
+        <splunk-control-group label="Default view">
+            <splunk-radio-input name="{{VIZ_NAMESPACE}}.view" value="3d">
+                <option value="3d">3D globe</option>
+                <option value="2d">2D map</option>
+            </splunk-radio-input>
+        </splunk-control-group>
+        <splunk-control-group label="Motion trails (fading tail behind each object)">
+            <splunk-radio-input name="{{VIZ_NAMESPACE}}.showTrails" value="true">
+                <option value="true">On</option><option value="false">Off</option>
+            </splunk-radio-input>
+        </splunk-control-group>
+        <splunk-control-group label="Satellite coverage footprints">
+            <splunk-radio-input name="{{VIZ_NAMESPACE}}.showFootprints" value="false">
+                <option value="true">On</option><option value="false">Off</option>
+            </splunk-radio-input>
+        </splunk-control-group>
+        <splunk-control-group label="Ground tracks">
+            <splunk-radio-input name="{{VIZ_NAMESPACE}}.showGroundTrack" value="false">
+                <option value="true">On</option><option value="false">Off</option>
+            </splunk-radio-input>
+        </splunk-control-group>
+        <splunk-control-group label="Day/Night terminator + eclipse shading">
+            <splunk-radio-input name="{{VIZ_NAMESPACE}}.showTerminator" value="false">
+                <option value="true">On</option><option value="false">Off</option>
+            </splunk-radio-input>
+        </splunk-control-group>
+        <splunk-control-group label="Ground-station FOV rings">
+            <splunk-radio-input name="{{VIZ_NAMESPACE}}.showStationFov" value="false">
+                <option value="true">On</option><option value="false">Off</option>
+            </splunk-radio-input>
+        </splunk-control-group>
+        <splunk-control-group label="FOV reference altitude (km)">
+            <splunk-text-input name="{{VIZ_NAMESPACE}}.fovRefAltKm" value="800"></splunk-text-input>
+        </splunk-control-group>
+    </splunk-formatter-section>
+
+    <splunk-formatter-section section-label="Selection &amp; color">
+        <splunk-control-group label="Pass-prediction window (hours)">
+            <splunk-text-input name="{{VIZ_NAMESPACE}}.passHours" value="24"></splunk-text-input>
+        </splunk-control-group>
+        <splunk-control-group label="Color objects by field (blank = by orbit class)">
+            <splunk-text-input name="{{VIZ_NAMESPACE}}.colorBy" value=""></splunk-text-input>
+        </splunk-control-group>
+    </splunk-formatter-section>
+
+    <splunk-formatter-section section-label="Time"
+        help="The time scrubber on the globe spans this many hours on each side of its anchor. Set a fixed start time (UTC) to open the globe paused at a specific instant.">
+        <splunk-control-group label="Scrubber window (± hours)">
+            <splunk-text-input name="{{VIZ_NAMESPACE}}.timeWindowHours" value="24"></splunk-text-input>
+        </splunk-control-group>
+        <splunk-control-group label="Start at time (UTC, e.g. 2026-07-16T18:00Z; blank = now)">
+            <splunk-text-input name="{{VIZ_NAMESPACE}}.atTime" value=""></splunk-text-input>
+        </splunk-control-group>
+        <splunk-control-group label="Time zone for clock &amp; picker (UTC, local, or IANA e.g. America/New_York)">
+            <splunk-text-input name="{{VIZ_NAMESPACE}}.timeZone" value="UTC"></splunk-text-input>
+        </splunk-control-group>
+    </splunk-formatter-section>
+
+    <splunk-formatter-section section-label="Ground-satellite connections"
+        help="Draws line-of-sight links from ground stations to satellites currently above the elevation mask. Colored by elevation (amber = low, green = overhead).">
+        <splunk-control-group label="Show connections">
+            <splunk-radio-input name="{{VIZ_NAMESPACE}}.showConnections" value="false">
+                <option value="true">On</option>
+                <option value="false">Off</option>
+            </splunk-radio-input>
+        </splunk-control-group>
+        <splunk-control-group label="Connection source">
+            <splunk-radio-input name="{{VIZ_NAMESPACE}}.connectionMode" value="geometry">
+                <option value="geometry">Line-of-sight (computed)</option>
+                <option value="data">From search (from/to rows)</option>
+                <option value="both">Both</option>
+            </splunk-radio-input>
+        </splunk-control-group>
+        <splunk-control-group label="Minimum elevation angle (degrees, line-of-sight mode)">
+            <splunk-text-input name="{{VIZ_NAMESPACE}}.minElevationDeg" value="10"></splunk-text-input>
+        </splunk-control-group>
+        <splunk-control-group label="Static links (e.g. ISS&gt;Svalbard, GPS&gt;Goldstone:active)">
+            <splunk-text-input name="{{VIZ_NAMESPACE}}.links" value=""></splunk-text-input>
+        </splunk-control-group>
+
+    </splunk-formatter-section>
+
+    <splunk-formatter-section section-label="Earth image"
+        help="For real satellite imagery, drop an equirectangular earth.jpg into the app's visualizations/globe folder (auto-detected), or set an explicit image URL here. Leave blank to use the built-in texture.">
+        <splunk-control-group label="Earth texture URL (blank = auto/built-in)">
+            <splunk-text-input name="{{VIZ_NAMESPACE}}.textureUrl" value=""></splunk-text-input>
+        </splunk-control-group>
+        <splunk-control-group label="Seasonal imagery (changes with the calendar)">
+            <splunk-radio-input name="{{VIZ_NAMESPACE}}.seasonalTexture" value="true">
+                <option value="true">On</option><option value="false">Off</option>
+            </splunk-radio-input>
+        </splunk-control-group>
+    </splunk-formatter-section>
+
+    <splunk-formatter-section section-label="Orbits &amp; animation">
+
+        <splunk-control-group label="Draw orbit paths (TLE objects)">
+            <splunk-radio-input name="{{VIZ_NAMESPACE}}.showOrbits" value="true">
+                <option value="true">On</option>
+                <option value="false">Off</option>
+            </splunk-radio-input>
+        </splunk-control-group>
+        <splunk-control-group label="Animation speed (x real time; 1 = realtime)">
+            <splunk-text-input name="{{VIZ_NAMESPACE}}.clockMultiplier" value="1"></splunk-text-input>
+        </splunk-control-group>
+
+    </splunk-formatter-section>
+
+    <splunk-formatter-section section-label="Altitude units">
+        <splunk-control-group label="Altitude column units (lat/lon/alt mode)">
+            <splunk-radio-input name="{{VIZ_NAMESPACE}}.altUnits" value="km">
+                <option value="km">Kilometers</option>
+                <option value="m">Meters</option>
+            </splunk-radio-input>
+        </splunk-control-group>
+    </splunk-formatter-section>
+
+    <splunk-formatter-section section-label="Field mapping (optional)"
+        help="Leave blank to auto-detect by column name. Set only if your fields are named differently.">
+
+        <splunk-control-group label="Name field">
+            <splunk-text-input name="{{VIZ_NAMESPACE}}.nameField" value=""></splunk-text-input>
+        </splunk-control-group>
+        <splunk-control-group label="Orbit class field (overrides auto-classify)">
+            <splunk-text-input name="{{VIZ_NAMESPACE}}.classField" value=""></splunk-text-input>
+        </splunk-control-group>
+        <splunk-control-group label="Latitude field">
+            <splunk-text-input name="{{VIZ_NAMESPACE}}.latField" value=""></splunk-text-input>
+        </splunk-control-group>
+        <splunk-control-group label="Longitude field">
+            <splunk-text-input name="{{VIZ_NAMESPACE}}.lonField" value=""></splunk-text-input>
+        </splunk-control-group>
+        <splunk-control-group label="Altitude field">
+            <splunk-text-input name="{{VIZ_NAMESPACE}}.altField" value=""></splunk-text-input>
+        </splunk-control-group>
+        <splunk-control-group label="TLE line 1 field">
+            <splunk-text-input name="{{VIZ_NAMESPACE}}.tle1Field" value=""></splunk-text-input>
+        </splunk-control-group>
+        <splunk-control-group label="TLE line 2 field">
+            <splunk-text-input name="{{VIZ_NAMESPACE}}.tle2Field" value=""></splunk-text-input>
+        </splunk-control-group>
+        <splunk-control-group label="Color field">
+            <splunk-text-input name="{{VIZ_NAMESPACE}}.colorField" value=""></splunk-text-input>
+        </splunk-control-group>
+
+    </splunk-formatter-section>
+</form>
