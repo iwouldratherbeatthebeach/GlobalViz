@@ -4,14 +4,15 @@ An interactive 3D globe custom visualization for Splunk that plots **satellites 
 orbital objects** (propagated from TLE data) and **ground sites** (lat/lon), and
 classifies every satellite by **orbit regime — LEO, MEO, GEO, HEO**.
 
-It is **fully self-contained**: no CesiumJS, no `satellite.js`, no external files, and
-**no network calls**. The orbital mechanics and the rendering are built in, and a
-photoreal NASA Blue Marble Earth texture is embedded in the app — so it runs on an
-**air-gapped Splunk** with nothing to download.
+It is **fully self-contained**: no CesiumJS, no bundled libraries, and **no network
+calls**. The orbital mechanics and the rendering are built in, and real NASA Blue Marble
+Earth imagery is embedded in the app — so it runs on an **air-gapped Splunk** with nothing
+to download. (Full SGP4 and higher-res imagery are optional same-origin drop-ins; see
+[Accuracy](#accuracy--propagation) and [Real satellite imagery](#real-satellite-imagery).)
 
 ![Globe Viz screenshot](docs/globe.png)
 
-![version](https://img.shields.io/badge/version-2.4.2-blue)
+![version](https://img.shields.io/badge/version-3.4.2-blue)
 ![splunk](https://img.shields.io/badge/Splunk-Enterprise%20%26%20Cloud-brightgreen)
 ![framework](https://img.shields.io/badge/dashboards-Simple%20XML-orange)
 ![offline](https://img.shields.io/badge/air--gapped-yes-success)
@@ -31,8 +32,9 @@ photoreal NASA Blue Marble Earth texture is embedded in the app — so it runs o
 - [Options reference](#options-reference)
 - [Controls](#controls)
 - [Real satellite imagery](#real-satellite-imagery)
+- [Dashboard interactivity (drilldown)](#dashboard-interactivity-drilldown)
 - [How it works](#how-it-works)
-- [Accuracy & limitations](#accuracy--limitations)
+- [Accuracy & propagation](#accuracy--propagation)
 - [Repository layout](#repository-layout)
 - [Building the .spl](#building-the-spl)
 - [Troubleshooting](#troubleshooting)
@@ -42,12 +44,18 @@ photoreal NASA Blue Marble Earth texture is embedded in the app — so it runs o
 
 ## Features
 
-- **Interactive 3D globe** rendered with the HTML5 Canvas 2D API (orthographic projection
-  with spherical limb shading and atmosphere glow). Drag to rotate, scroll to zoom.
+- **3D globe or 2D map** — switch between an interactive 3D globe (orthographic, limb
+  shading, atmosphere glow) and a flat equirectangular world map, from a single button.
+  Both drag to pan/rotate and scroll to zoom.
+- **Settings menu (⚙)** — all the layer toggles, tools, and the propagator selector live in
+  a tidy settings panel; the globe face stays clean with just the view switch, search,
+  time bar, and legend. The active propagator (SGP4 / Kepler+J2) is shown as a badge.
 - **Photoreal Earth** — embedded NASA Blue Marble texture. Drop in a higher-res image or
   switch to a simple vector globe.
-- **Satellite tracking from TLEs** — a built-in Kepler (two-body) propagator computes and
-  animates each orbit; no external orbital library.
+- **Satellite tracking from TLEs** — a built-in Kepler + **J2** propagator computes and
+  animates each orbit (optional drop-in SGP4); no external orbital library required.
+- **Motion trails** — a fading tail behind each object showing recent travel, computed from
+  the propagator so it looks identical at any animation speed.
 - **Orbit-regime classification** — LEO / MEO / GEO / HEO (plus Ground), auto-detected
   from the orbital elements, each colored, with an interactive legend to toggle classes.
 - **Ground / lat-lon mapping** — plot ground stations, cities, or precomputed positions.
@@ -57,6 +65,26 @@ photoreal NASA Blue Marble Earth texture is embedded in the app — so it runs o
   pass over — watch contact windows open and close.
 - **Cities layer** — ~130 major world cities that appear progressively as you zoom in
   (embedded; no map tiles, works offline).
+- **Toggleable analysis layers** (on-globe chips + Format-menu options): satellite
+  **coverage footprints**, **ground tracks**, a **day/night terminator** (with eclipse
+  dimming of satellites in Earth's shadow), and **ground-station FOV rings**.
+- **Search + select + passes** — find an object by name; selecting highlights its orbit,
+  dims the rest, and opens a panel with orbital parameters and **next-pass predictions**
+  (AOS/LOS + max elevation) over each ground station.
+- **Interactive linking (🔗 Link tool)** — click any two objects (satellite↔satellite or
+  satellite↔ground) to draw a connection, alongside the data-driven links from your search.
+- **Color by any field** — color objects by an arbitrary column (country/operator/type).
+- **Time controls** — a clock (UTC, browser-local, or any IANA time zone), a time scrubber,
+  ±10m/±1h step buttons, a "set exact time" field, and **Now**. Jump to any instant and every
+  satellite snaps to exactly where it is then (and pass predictions recompute from that
+  time); play/pause/speed still work.
+- **Satellite icons** — objects render as a satellite glyph (body + solar panels) colored
+  by class; ground stations as triangles.
+- **Click-to-drilldown** — clicking an object sets Splunk dashboard tokens so other panels
+  react (see "Dashboard interactivity").
+- **Export** — download the current view as **PNG**, or the visible objects as **CSV**.
+- **Accurate propagation** — built-in Kepler **+ J2 secular perturbations** (nodal/apsidal
+  precession), or drop in `satellite.min.js` for full **SGP4** (see "Accuracy").
 - **Click for details** — apogee, perigee, period, inclination, eccentricity (satellites)
   or lat/lon/alt (ground).
 - **On-globe speed controls** — pause / 1x / 10x / 60x / 300x.
@@ -205,6 +233,12 @@ match the object names exactly (case-insensitive) — e.g. `to="ISS (ZARYA)"`.
 Alternative (one row per object): add a `connects_to` column listing the names it links to,
 comma-separated — e.g. a satellite row with `connects_to="Svalbard, Goldstone"`.
 
+**Simplest of all — define links in the command** with the `links` option (no data rows
+needed): `links="ISS (ZARYA)>Svalbard (SvalSat):active, GALILEO>Madrid DSN"`. Each entry is
+`from>to` with an optional `:status`. Defined links (from rows, `connects_to`, or the
+`links` option) show when the **Links** layer is on and **Connection source** is `From
+search` or `Both`.
+
 ## Orbit classification
 
 Computed from the TLE-derived orbital elements (or the `alt` value in lat/lon mode):
@@ -271,6 +305,21 @@ All set via the Format menu, or as `<option name="display.visualizations.custom.
 | `showConnections` | `false` | Draw ground→satellite line-of-sight links |
 | `minElevationDeg` | `10` | Elevation mask (deg) for a satellite to count as "in contact" (geometry mode) |
 | `connectionMode` | `geometry` | `geometry` (line-of-sight), `data` (from/to rows in the search), or `both` |
+| `showFootprints` | `false` | Satellite coverage (horizon) circles |
+| `showGroundTrack` | `false` | Sub-satellite ground tracks |
+| `showTrails` | `true` | Fading motion trail behind each object (speed-independent; computed from the propagator) |
+| `showTerminator` | `false` | Day/night shading + eclipse dimming |
+| `showStationFov` | `false` | Ground-station FOV coverage rings |
+| `fovRefAltKm` | `800` | Reference altitude for the FOV rings |
+| `passHours` | `24` | Window for next-pass predictions in the detail panel |
+| `colorBy` | *(blank)* | Color objects by this field instead of orbit class |
+| `timeWindowHours` | `24` | Time scrubber spans ± this many hours around its anchor |
+| `atTime` | *(blank)* | Open paused at a fixed UTC instant (e.g. `2026-07-16T18:00Z`) |
+| `timeZone` | `UTC` | Time zone for the clock & picker: `UTC`, `local`, or any IANA name (e.g. `America/New_York`). Also switchable in Settings. |
+| `propagator` | `auto` | `auto` (SGP4 if `satellite.min.js` present, else built-in), `builtin`, or `sgp4` |
+| `view` | `3d` | Default view: `3d` globe or `2d` equirectangular map |
+| `seasonalTexture` | `true` | Swap the Earth image by calendar season (winter/spring/summer/autumn) |
+| `links` | *(blank)* | Static links defined in the command: `A>B, C>D:active` (optional `:status`) |
 | `showOrbits` | `true` | Draw orbit paths for TLE objects |
 | `clockMultiplier` | `1` | Initial animation speed (× realtime) |
 | `orbitWindowHours` | `3` | Orbit-track window length |
@@ -280,17 +329,24 @@ All set via the Format menu, or as `<option name="display.visualizations.custom.
 
 ## Controls
 
-- **Drag** — rotate the globe.
+- **Drag** — rotate the globe (pan, in 2D map mode).
 - **Scroll** — zoom (out far enough to see GEO/HEO, in to inspect the map).
+- **⚙ Settings** (top-left) — layer toggles (trails, footprints, ground tracks, day/night,
+  FOV, links, cities), the 🔗 Link tool, PNG/CSV export, the propagator selector, and the
+  **time-zone** picker. The view switch (**2D/3D**) and the active-propagator badge sit in
+  the toolbar next to it.
 - **Legend** (top-right) — click a class to show/hide it.
-- **Speed bar** (bottom-left) — pause / 1x / 10x / 60x / 300x. These always work; the
-  dashboard `clockMultiplier` option just sets the starting speed.
-- **Click** a satellite or ground point for a details tooltip.
+- **Bottom bar** — pause / 1x / 10x / 60x / 300x speed, then the clock, ±10m/±1h steps,
+  **Now**, the time scrubber, and the exact-time picker. Speed always works; the dashboard
+  `clockMultiplier` option just sets the starting speed.
+- **Search** (top-right) — find and select an object by name.
+- **Click** a satellite or ground point for a details tooltip (and to drive drilldown).
 
 ## Real satellite imagery
 
-The app ships with a photoreal NASA Blue Marble texture **embedded** (2700×1350), so it
-works out of the box, offline. To use your own / higher-resolution imagery:
+The app ships with real NASA Blue Marble imagery **embedded** (four seasonal monthly
+composites at 2048×1024; see below), so it works out of the box, offline. To use your own /
+higher-resolution imagery:
 
 - **Drop-in file:** save an equirectangular Earth image as `earth.jpg` (or `earth.png`)
   in `appserver/static/visualizations/globe/`. The app auto-detects and uses it over the
@@ -301,24 +357,58 @@ works out of the box, offline. To use your own / higher-resolution imagery:
 Source imagery: NASA Visible Earth *Blue Marble*
 (https://visibleearth.nasa.gov/collection/1484/blue-marble), equirectangular, 2:1 aspect.
 
+**Seasonal imagery:** with `seasonalTexture` on (default), the globe swaps the Earth image
+by calendar season as you scrub through time. Four **real NASA Blue Marble Next Generation
+monthly composites** are embedded — January (winter), April (spring), June (summer), and
+August (autumn; nearest available month) — each at 2048×1024. To substitute your own
+imagery, drop `earth_winter.jpg` / `earth_spring.jpg` / `earth_summer.jpg` /
+`earth_autumn.jpg` into the viz folder (auto-detected); a plain `earth.jpg` overrides all
+seasons.
+
 ## How it works
 
 - **No dependencies.** Everything is in one `visualization.js`: the globe renderer, the
   orbital propagator, the coastline fallback, and the base64 Earth texture.
-- **Propagation.** TLEs are parsed and propagated with a two-body Kepler model
-  (`M → E → true anomaly → ECI`), then converted to earth-fixed lat/lon/alt using GMST.
+- **Propagation.** TLEs are parsed and propagated with a Kepler model
+  (`M → E → true anomaly → ECI`) plus **J2 secular** perturbations, then converted to
+  earth-fixed lat/lon/alt using GMST. Full SGP4 is used automatically if `satellite.min.js`
+  is present (see [Accuracy](#accuracy--propagation)).
 - **Rendering.** An orthographic projection maps the textured sphere (computed once per
   orientation on an offscreen canvas) to the panel; satellites and orbit tracks are drawn
   on top with correct front/back-hemisphere occlusion.
 - **Offline by design.** Splunk's Content-Security-Policy blocks external scripts; this
   app needs none, which is why it works in locked-down / air-gapped deployments.
 
-## Accuracy & limitations
+## Dashboard interactivity (drilldown)
 
-- Propagation is **two-body Keplerian** (no J2, drag, or SGP4 perturbations). It
-  reproduces orbit shape, size, inclination, and period faithfully for visualization, but
-  is **not** a precision conjunction/tracking tool. Refresh TLEs regularly and expect
-  small drift versus full SGP4 over long spans.
+Clicking a satellite or ground station fires a Splunk field-value drilldown, so you can
+set tokens and make other panels react. In the panel's `<viz>` element:
+
+```xml
+<drilldown>
+  <set token="sel">$click.value$</set>        <!-- clicked object's name -->
+  <set token="selClass">$row.orbit_class$</set>
+</drilldown>
+```
+
+Then build dependent panels, e.g. `<row depends="$sel$">` with a search filtered by
+`name="$sel$"`. Fields passed on click: `name`, `type`, `orbit_class`, `lat`, `lon`,
+`alt_km`, and (for satellites) `apogee_km`, `perigee_km`, `period_min`, `inclination_deg`
+— available as `$row.<field>$` (and the name as `$click.value$`). The bundled dashboard
+includes a working example panel.
+
+## Accuracy & propagation
+
+- **Built-in:** two-body Kepler **plus J2 secular perturbations** (nodal + apsidal
+  precession and the mean-motion correction). This captures the dominant long-term effects
+  two-body misses — e.g. sun-synchronous nodal drift (~0.986°/day) and the frozen perigee
+  of Molniya orbits at 63.4° — and is validated against those known values.
+- **Full SGP4 (optional):** drop `satellite.min.js` into
+  `appserver/static/visualizations/globe/` (one file, same pattern as the Earth texture)
+  and set `propagator = auto`/`sgp4`. The app auto-detects it and uses true SGP4 for
+  positions and pass predictions. Get it from the satellite.js release on an
+  internet-connected machine and carry it across the air-gap.
+- Either way, refresh TLEs regularly; accuracy degrades as elements age.
 - Row cap is 50,000 (Splunk custom-viz API). Thousands of animated orbits will tax the
   GPU; pre-filter or use precomputed points for very large catalogs.
 - The globe is a texture-mapped sphere (orthographic), not a full WebGL engine.
